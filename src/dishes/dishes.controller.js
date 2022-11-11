@@ -3,7 +3,10 @@ const dishes = require(path.resolve("src/data/dishes-data"));
 const nextId = require("../utils/nextId");
 
 //Functional Middleware functions:
-const dishExists = (req, res, next) => {
+
+//if dish exist it will be retrieved by ID
+//if dish does not exist it will return error 404 with corresponding message
+function dishExists (req, res, next) {
    const dishId = req.params.dishId;
    res.locals.dishId = dishId;
    const foundDish = dishes.find((dish) => dish.id === dishId);
@@ -14,8 +17,8 @@ const dishExists = (req, res, next) => {
    }
    res.locals.dish = foundDish;
 };
-
-const dishValidName = (req, res, next) => {
+//Dish must have a name. If the dish does not have a name or 0 characters return error with corresponding message
+function dishValidName (req, res, next) {
    const { data = null } = req.body;
    res.locals.newDD = data;
    const dishName = data.name;
@@ -26,8 +29,8 @@ const dishValidName = (req, res, next) => {
       });
    }
 };
-
-const dishHasValidDescription = (req, res, next) => {
+//Dish must contain a description. If there is no description or 0 characters return error with message asking for description
+function dishHasValidDescription (req, res, next) {
    const dishDescription = res.locals.newDD.description;
    if (!dishDescription || dishDescription.length === 0) {
       return next({
@@ -36,8 +39,9 @@ const dishHasValidDescription = (req, res, next) => {
       });
    }
 };
-
-const dishHasValidPrice = (req, res, next) => {
+//Dish must have a valid price. If there is no proce, if it is not a number, or
+// 0 will send error reqesting a price
+function dishHasValidPrice (req, res, next) {
    const dishPrice = res.locals.newDD.price;
    if (!dishPrice || typeof dishPrice != "number" || dishPrice <= 0) {
       return next({
@@ -46,8 +50,8 @@ const dishHasValidPrice = (req, res, next) => {
       });
    }
 };
-
-const dishHasValidImage = (req, res, next) => {
+// Dishes must have a valid imagine. If the length of chars is 0 or there is no image. Will require an image url
+function dishHasValidImage (req, res, next) {
    const dishImage = res.locals.newDD.image_url;
    if (!dishImage || dishImage.length === 0) {
       return next({
@@ -56,8 +60,8 @@ const dishHasValidImage = (req, res, next) => {
       });
    }
 };
-
-const dishIdMatches = (req, res, next) => {
+//Dish ID's must match to locate. If there is no ID or non matching ID an error will be returned asking for ID for the correct dish
+function dishIdMatches (req, res, next) {
    const paramId = res.locals.dishId;
    const { id = null } = res.locals.newDD;
    if (paramId != id && id) {
@@ -69,7 +73,7 @@ const dishIdMatches = (req, res, next) => {
 };
 
 //Clarity Middleware Functions
-const createValidation = (req, res, next) => {
+function createValidation (req, res, next) {
    dishValidName(req, res, next);
    dishHasValidDescription(req, res, next);
    dishHasValidPrice(req, res, next);
@@ -77,12 +81,12 @@ const createValidation = (req, res, next) => {
    next();
 };
 
-const readValidation = (req, res, next) => {
+function readValidation (req, res, next) {
    dishExists(req, res, next);
    next();
 };
 
-const updateValidation = (req, res, next) => {
+function updateValidation (req, res, next) {
    dishExists(req, res, next);
    dishValidName(req, res, next);
    dishHasValidDescription(req, res, next);
